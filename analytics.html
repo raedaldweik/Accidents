@@ -4,1277 +4,530 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Predictive Accident Forecasting & Intelligence</title>
-
-  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Charts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
   <style>
-    :root{
-      --bg0:#070A12;
-      --bg1:#0B1020;
+    :root {
+      --bg0: #070A12; --bg1: #0B1020;
       --stroke: rgba(255,255,255,.12);
       --text: rgba(255,255,255,.92);
       --muted: rgba(255,255,255,.65);
       --muted2: rgba(255,255,255,.45);
-      --good:#2ecc71;
-      --warn:#f39c12;
-      --bad:#ff4757;
-      --accent:#7c5cff;
-      --shadow: 0 20px 60px rgba(0,0,0,.55);
-      --radius: 16px;
-
-      --low: rgba(46,204,113,.90);
-      --med: rgba(243,156,18,.92);
+      --shadow: 0 12px 40px rgba(0,0,0,.5);
+      --radius: 14px;
+      --low:  rgba(46,204,113,.90);
+      --med:  rgba(243,156,18,.92);
       --high: rgba(255,140,0,.95);
       --crit: rgba(255,71,87,.95);
     }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    *{ box-sizing:border-box; }
-    html, body{ height:100%; }
-    body{
-      margin:0;
-      font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    body {
+      font-family: 'Poppins', system-ui, sans-serif;
       background:
         radial-gradient(1200px 600px at 15% 10%, rgba(124,92,255,.22), transparent 60%),
         radial-gradient(900px 600px at 85% 20%, rgba(46,204,113,.12), transparent 55%),
         radial-gradient(900px 700px at 30% 85%, rgba(255,71,87,.10), transparent 55%),
         linear-gradient(180deg, var(--bg0), var(--bg1));
+      background-attachment: fixed;
       color: var(--text);
-      overflow:hidden;
+      min-height: 100vh;
+      overflow-y: auto;
     }
 
-    .app{
-      height:100%;
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-      padding:16px;
-    }
+    .app { display: flex; flex-direction: column; gap: 10px; padding: 12px; }
 
-    .header{
+    /* ── HEADER ── */
+    .header {
       background: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
-      border:1px solid var(--stroke);
+      border: 1px solid var(--stroke);
       border-radius: var(--radius);
-      padding:16px 18px;
+      padding: 12px 16px;
       box-shadow: var(--shadow);
       backdrop-filter: blur(14px);
-      display:flex;
-      flex-direction:column;
-      gap:12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
+    .titleRow { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .title    { font-size: 18px; font-weight: 800; letter-spacing: .2px; line-height: 1.2; }
+    .subtitle { font-size: 11px; color: var(--muted); font-weight: 500; margin-top: 2px; }
 
-    .titleRow{
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:12px;
-      flex-wrap:wrap;
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .pill {
+      border: 1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.22);
+      color: rgba(255,255,255,.9); padding: 6px 10px; border-radius: 999px;
+      font-weight: 700; font-size: 11px; display: flex; gap: 6px; align-items: center;
     }
-
-    .title{
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing:.2px;
-      margin:0;
-      line-height:1.15;
-    }
-    .subtitle{
-      margin:4px 0 0 0;
-      font-size: 12px;
-      color: var(--muted);
-      font-weight:500;
-    }
-
-    .controls{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      justify-content:flex-end;
-    }
-    .pill{
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.22);
-      color: rgba(255,255,255,.9);
-      padding:8px 10px;
-      border-radius: 999px;
-      font-weight:700;
-      font-size: 12px;
-      display:flex;
-      gap:8px;
-      align-items:center;
-      user-select:none;
-    }
-    select, button{
+    select, button {
       font-family: 'Poppins', sans-serif;
-      border-radius: 12px;
-      border:1px solid rgba(255,255,255,.16);
-      background: rgba(0,0,0,.25);
-      color: rgba(255,255,255,.92);
-      padding:10px 12px;
-      font-weight:700;
-      font-size: 12px;
-      cursor:pointer;
-      outline:none;
-      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+      border-radius: 10px; border: 1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.25); color: rgba(255,255,255,.92);
+      padding: 7px 10px; font-weight: 700; font-size: 11px;
+      cursor: pointer; outline: none;
+      transition: transform .15s, border-color .15s, background .15s;
     }
-    select:hover, button:hover{
-      transform: translateY(-1px);
-      border-color: rgba(124,92,255,.55);
-      background: rgba(124,92,255,.18);
-    }
-    button:active{ transform: translateY(0); }
+    select:hover, button:hover { transform: translateY(-1px); border-color: rgba(124,92,255,.55); background: rgba(124,92,255,.18); }
+    button:active { transform: translateY(0); }
 
-    .kpis{
-      display:grid;
-      grid-template-columns: repeat(4, minmax(200px, 1fr));
-      gap:12px;
-    }
-
-    .kpi{
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,.10);
+    /* ── KPIs ── */
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .kpi {
+      border-radius: 12px; border: 1px solid rgba(255,255,255,.10);
       background: linear-gradient(135deg, rgba(255,255,255,.09), rgba(255,255,255,.03));
-      padding:12px 12px 10px;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 10px 35px rgba(0,0,0,.35);
-      position:relative;
-      overflow:hidden;
-      transition: transform .18s ease, border-color .18s ease;
-      cursor:pointer;
+      padding: 10px 12px 8px; backdrop-filter: blur(12px);
+      box-shadow: 0 8px 24px rgba(0,0,0,.3);
+      position: relative; overflow: hidden;
+      transition: transform .15s, border-color .15s; cursor: pointer;
     }
-    .kpi:hover{
-      transform: translateY(-2px);
-      border-color: rgba(124,92,255,.35);
+    .kpi:hover { transform: translateY(-2px); border-color: rgba(124,92,255,.35); }
+    .kpi::before {
+      content:""; position:absolute; inset:-50px -30px auto auto;
+      width:120px; height:120px;
+      background: radial-gradient(circle at 30% 30%, rgba(124,92,255,.30), transparent 60%);
+      filter:blur(2px); transform:rotate(18deg); pointer-events:none;
     }
-    .kpi:before{
-      content:"";
-      position:absolute;
-      inset:-60px -40px auto auto;
-      width:140px; height:140px;
-      background: radial-gradient(circle at 30% 30%, rgba(124,92,255,.35), transparent 60%);
-      filter: blur(2px);
-      transform: rotate(18deg);
-      pointer-events:none;
+    .kpiLabel  { color:var(--muted); font-size:11px; font-weight:700; margin-bottom:5px; }
+    .kpiValue  { font-size:22px; font-weight:800; display:flex; align-items:baseline; gap:5px; }
+    .kpiUnit   { font-size:11px; color:var(--muted2); font-weight:700; }
+    .kpiMeta   { margin-top:5px; display:flex; align-items:center; gap:8px; }
+    .chip {
+      padding: 4px 8px; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14); background: rgba(0,0,0,.18);
+      font-size: 10px; font-weight: 800; white-space: nowrap;
     }
+    .chip.good { border-color:rgba(46,204,113,.32); background:rgba(46,204,113,.10); color:#2ecc71; }
+    .chip.bad  { border-color:rgba(255,71,87,.35);  background:rgba(255,71,87,.12);  color:#ff4757; }
+    .chip.warn { border-color:rgba(243,156,18,.35); background:rgba(243,156,18,.12); color:#f39c12; }
+    .kpiBar    { margin-top:8px; height:5px; border-radius:999px; background:rgba(255,255,255,.10); overflow:hidden; }
+    .kpiFill   { height:100%; border-radius:999px; background:linear-gradient(90deg,rgba(124,92,255,.85),rgba(124,92,255,.25)); width:0%; transition:width .45s ease; }
 
-    .kpiLabel{
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing:.2px;
-      margin-bottom:8px;
-    }
-    .kpiValue{
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing:.2px;
-      display:flex;
-      align-items:baseline;
-      gap:8px;
-    }
-    .kpiUnit{
-      font-size: 12px;
-      color: var(--muted2);
-      font-weight:700;
-    }
-    .kpiMeta{
-      margin-top:6px;
-      font-size: 12px;
-      font-weight:700;
-      color: rgba(255,255,255,.82);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .kpiMeta .chip{
-      padding:6px 10px;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.18);
-      color: rgba(255,255,255,.82);
-      font-size: 11px;
-      font-weight:800;
-      white-space:nowrap;
-    }
-    .chip.good{ border-color: rgba(46,204,113,.32); background: rgba(46,204,113,.10); }
-    .chip.bad{ border-color: rgba(255,71,87,.35); background: rgba(255,71,87,.12); }
-    .chip.warn{ border-color: rgba(243,156,18,.35); background: rgba(243,156,18,.12); }
+    /* ── LAYOUT ── */
+    .row1 { display: grid; grid-template-columns: minmax(260px,1fr) 2.4fr; gap: 10px; }
+    .row2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; }
+    .stack { display: flex; flex-direction: column; gap: 10px; }
 
-    .kpiBar{
-      margin-top:10px;
-      height:8px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.10);
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.08);
-    }
-    .kpiFill{
-      height:100%;
-      border-radius: 999px;
-      background: linear-gradient(90deg, rgba(124,92,255,.85), rgba(124,92,255,.25));
-      width:0%;
-      transition: width .45s ease;
-    }
-
-    .grid{
-      flex:1;
-      display:grid;
-      grid-template-columns: 1.05fr 1.95fr;
-      grid-template-rows: auto 1fr;
-      gap:14px;
-      min-height:0;
-    }
-
-    .panel{
-      border-radius: var(--radius);
-      border:1px solid var(--stroke);
+    /* ── PANEL ── */
+    .panel {
+      border-radius: var(--radius); border: 1px solid var(--stroke);
       background: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(14px);
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-      min-height:0;
+      box-shadow: var(--shadow); backdrop-filter: blur(14px);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .panelHeader {
+      padding: 10px 12px 8px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+    }
+    .panelHeader h2 { font-size: 12px; font-weight: 800; letter-spacing: .2px; }
+    .panelHeader p  { font-size: 11px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+    .tag {
+      padding: 5px 9px; border-radius: 999px; font-size: 10px; font-weight: 800;
+      border: 1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.20);
+      color: var(--muted); white-space: nowrap; flex-shrink: 0; height: fit-content;
+    }
+    .panelBody { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+
+    /* ── ALERT BOX ── */
+    .alertBox {
+      border: 1px solid rgba(255,71,87,.28);
+      background: linear-gradient(135deg, rgba(255,71,87,.12), rgba(0,0,0,.16));
+      border-radius: 12px; padding: 10px 12px;
+    }
+    .alertTop { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+    .alertLeft { display:flex; align-items:center; gap:8px; }
+    .alertIcon {
+      width:28px; height:28px; border-radius:9px;
+      display:grid; place-items:center; font-size:15px;
+      background:rgba(255,71,87,.18); border:1px solid rgba(255,71,87,.28); flex-shrink:0;
+    }
+    .alertHead  { font-size:12px; font-weight:900; }
+    .alertSub   { font-size:10px; color:rgba(255,255,255,.60); font-weight:700; }
+    .alertText  { font-size:12px; line-height:1.5; font-weight:700; color:rgba(255,255,255,.90); }
+    .hint {
+      font-size:10px; color:rgba(255,255,255,.50); font-weight:700; margin-top:7px;
+      display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;
     }
 
-    .panelHeader{
-      padding:14px 14px 10px;
-      border-bottom:1px solid rgba(255,255,255,.10);
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:12px;
+    /* ── CHARTS ── */
+    .chartWrap {
+      border-radius: 12px; border: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.14); padding: 8px; position:relative;
     }
-    .panelHeader h2{
-      margin:0;
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing:.2px;
-    }
-    .panelHeader p{
-      margin:4px 0 0 0;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight:500;
-    }
-    .tag{
-      padding:8px 10px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight:800;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.20);
-      color: var(--muted);
-      white-space:nowrap;
-      height:fit-content;
-    }
+    .chartWrap canvas { display:block; width:100% !important; }
 
-    .panelBody{
-      padding:14px;
-      overflow:auto;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      min-height:0;
+    /* ── HEATMAP ── */
+    .heatWrap {
+      border-radius: 12px; border: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.14); padding: 10px;
     }
+    .heatTop {
+      display:flex; align-items:center; justify-content:space-between;
+      gap:8px; flex-wrap:wrap; margin-bottom:10px;
+    }
+    .heatTitle  { font-size:11px; font-weight:900; }
+    .heatSub    { font-size:10px; color:rgba(255,255,255,.50); font-weight:700; margin-top:1px; }
+    .heatLegend { display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-size:10px; font-weight:800; color:rgba(255,255,255,.75); }
+    .heatLegend span { display:flex; align-items:center; gap:4px; }
+    .dot { width:9px; height:9px; border-radius:999px; border:1px solid rgba(255,255,255,.20); display:inline-block; }
+    .dot.low  { background:var(--low); }
+    .dot.med  { background:var(--med); }
+    .dot.high { background:var(--high); }
+    .dot.crit { background:var(--crit); }
 
-    .alertBox{
-      border:1px solid rgba(255,71,87,.30);
-      background: linear-gradient(135deg, rgba(255,71,87,.14), rgba(0,0,0,.18));
-      border-radius: 14px;
-      padding:14px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    .heatGrid { display:grid; grid-template-columns:40px repeat(12,1fr); gap:4px; align-items:center; }
+    .heatRowLabel { font-size:10px; color:rgba(255,255,255,.70); font-weight:800; padding-left:2px; }
+    .heatCell {
+      height:16px; border-radius:5px; border:1px solid rgba(255,255,255,.07);
+      cursor:pointer; transition:transform .12s, border-color .12s, box-shadow .12s;
     }
-    .alertTitle{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      font-weight:900;
-      letter-spacing:.2px;
-      margin-bottom:8px;
-    }
-    .alertTitle .left{
-      display:flex; align-items:center; gap:10px;
-    }
-    .alertIcon{
-      width:34px; height:34px;
-      border-radius: 12px;
-      display:grid;
-      place-items:center;
-      background: rgba(255,71,87,.18);
-      border:1px solid rgba(255,71,87,.30);
-    }
-    .alertText{
-      color: rgba(255,255,255,.92);
-      font-size: 14px;
-      line-height:1.55;
-      font-weight:700;
-    }
-    .hint{
-      font-size: 11px;
-      color: rgba(255,255,255,.62);
-      font-weight:700;
-      margin-top:10px;
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-    }
+    .heatCell:hover { transform:scale(1.08); border-color:rgba(124,92,255,.55); box-shadow:0 3px 10px rgba(0,0,0,.4); }
 
-    .chartWrap{
-      position:relative;
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.16);
-      padding:10px;
-      overflow:hidden;
-    }
-    canvas{ width:100% !important; height:100% !important; }
+    .axisRow { display:grid; grid-template-columns:40px repeat(12,1fr); gap:4px; margin-top:5px; }
+    .axisRow .tick { font-size:9px; color:rgba(255,255,255,.45); font-weight:800; text-align:center; }
 
-    .bottom{
-      grid-column: 1 / -1;
-      display:grid;
-      grid-template-columns: 1.35fr 1fr;
-      gap:14px;
-      min-height:0;
+    /* ── TOOLTIP ── */
+    .tooltip {
+      position:fixed; pointer-events:none; z-index:9999;
+      opacity:0; transform:translateY(6px);
+      transition:opacity .10s, transform .10s;
+      padding:8px 11px; border-radius:10px;
+      background:rgba(10,14,28,.88); border:1px solid rgba(255,255,255,.16);
+      backdrop-filter:blur(12px); box-shadow:0 8px 28px rgba(0,0,0,.45);
+      color:rgba(255,255,255,.92); max-width:240px;
     }
-    .stack{
-      display:grid;
-      grid-template-rows: 1fr 1fr;
-      gap:14px;
-      min-height:0;
-    }
+    .tooltip.visible { opacity:1; transform:translateY(0); }
+    .tooltip .t1 { font-weight:900; font-size:11px; margin-bottom:2px; }
+    .tooltip .t2 { font-weight:700; font-size:11px; color:rgba(255,255,255,.70); }
 
-    /* Heatmap */
-    .heatWrap{
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.16);
-      padding:12px;
-      overflow:hidden;
-    }
-    .heatTop{
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:12px;
-      flex-wrap:wrap;
-      margin-bottom:10px;
-    }
-    .heatLegend{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-      color: rgba(255,255,255,.78);
-      font-weight:800;
-      font-size: 11px;
-    }
-    .dot{
-      width:11px; height:11px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.22);
-      display:inline-block;
-      margin-right:6px;
-    }
-    .dot.low{ background: var(--low); }
-    .dot.med{ background: var(--med); }
-    .dot.high{ background: var(--high); }
-    .dot.crit{ background: var(--crit); }
-
-    .heatGrid{
-      display:grid;
-      grid-template-columns: 56px repeat(12, 1fr);
-      gap:6px;
-      align-items:center;
-    }
-    .heatRowLabel{
-      font-size: 12px;
-      color: rgba(255,255,255,.72);
-      font-weight:800;
-      text-align:left;
-      padding-left:4px;
-    }
-    .heatCell{
-      height:18px;
-      border-radius: 6px;
-      border:1px solid rgba(255,255,255,.10);
-      cursor:pointer;
-      transition: transform .12s ease, border-color .12s ease;
-      position:relative;
-    }
-    .heatCell:hover{
-      transform: translateY(-1px);
-      border-color: rgba(124,92,255,.45);
-    }
-
-    .axisRow{
-      margin-top:10px;
-      display:grid;
-      grid-template-columns: 56px repeat(12, 1fr);
-      gap:6px;
-      align-items:center;
-    }
-    .axisRow .spacer{ height:1px; }
-    .axisRow .tick{
-      font-size: 10px;
-      color: rgba(255,255,255,.55);
-      font-weight:800;
-      text-align:center;
-    }
-
-    /* Tooltip (custom) */
-    .tooltip{
-      position:fixed;
-      pointer-events:none;
-      z-index:9999;
-      opacity:0;
-      transform: translateY(6px);
-      transition: opacity .10s ease, transform .10s ease;
-      padding:10px 12px;
-      border-radius: 12px;
-      background: rgba(10,14,28,.78);
-      border:1px solid rgba(255,255,255,.16);
-      backdrop-filter: blur(12px);
-      box-shadow: 0 10px 35px rgba(0,0,0,.45);
-      color: rgba(255,255,255,.92);
-      max-width: 260px;
-    }
-    .tooltip.visible{
-      opacity:1;
-      transform: translateY(0);
-    }
-    .tooltip .t1{ font-weight:900; font-size: 12px; margin:0 0 2px 0; }
-    .tooltip .t2{ font-weight:700; font-size: 12px; margin:0; color: rgba(255,255,255,.78); }
-
-    @media (max-width: 1200px){
-      body{ overflow:auto; }
-      .app{ height:auto; }
-      .kpis{ grid-template-columns: repeat(2, minmax(220px, 1fr)); }
-      .grid{ grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; }
-      .bottom{ grid-template-columns: 1fr; }
-      .stack{ grid-template-rows: auto auto; }
+    @media (max-width:1050px) {
+      .kpis { grid-template-columns:repeat(2,1fr); }
+      .row1  { grid-template-columns:1fr; }
+      .row2  { grid-template-columns:1fr; }
     }
   </style>
 </head>
-
 <body>
-  <div class="app">
+<div class="app">
 
-    <!-- HEADER -->
-    <div class="header">
-      <div class="titleRow">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="titleRow">
+      <div>
+        <div class="title">Predictive Accident Forecasting &amp; Intelligence</div>
+        <div class="subtitle">City-wide risk outlook, early warnings, and explainable drivers for the next 24 hours.</div>
+      </div>
+      <div class="controls">
+        <div class="pill">🕒 <span id="nowLabel">Live</span></div>
+        <select id="areaSelect">
+          <option value="ALL" selected>All Areas</option>
+          <option value="Al Qusais">Al Qusais</option>
+          <option value="Al Rashidiyah">Al Rashidiyah</option>
+          <option value="Hor Al Anz">Hor Al Anz</option>
+          <option value="Airport Rd">Airport Rd</option>
+          <option value="Al Twar">Al Twar</option>
+          <option value="Muraqqabad">Muraqqabad</option>
+        </select>
+        <select id="horizonSelect">
+          <option value="24" selected>Next 24 Hours</option>
+          <option value="12">Next 12 Hours</option>
+          <option value="6">Next 6 Hours</option>
+        </select>
+        <button id="resetBtn" type="button">Reset</button>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi" data-kpi="confidence">
+        <div class="kpiLabel">Model Confidence</div>
+        <div class="kpiValue"><span id="kpiConfidence">91</span><span class="kpiUnit">%</span></div>
+        <div class="kpiMeta"><span class="chip good" id="kpiConfidenceChip">Stable</span></div>
+        <div class="kpiBar"><div class="kpiFill" id="barConfidence"></div></div>
+      </div>
+      <div class="kpi" data-kpi="streets">
+        <div class="kpiLabel">Critical Risk Streets</div>
+        <div class="kpiValue"><span id="kpiStreets">3</span></div>
+        <div class="kpiMeta"><span class="chip bad" id="kpiStreetsChip">Risk score &gt; 85%</span></div>
+        <div class="kpiBar"><div class="kpiFill" id="barStreets"></div></div>
+      </div>
+      <div class="kpi" data-kpi="expected">
+        <div class="kpiLabel">Accidents Expected (Next 3h)</div>
+        <div class="kpiValue"><span id="kpiExpected">18</span></div>
+        <div class="kpiMeta"><span class="chip warn" id="kpiExpectedChip">Elevated</span></div>
+        <div class="kpiBar"><div class="kpiFill" id="barExpected"></div></div>
+      </div>
+      <div class="kpi" data-kpi="city">
+        <div class="kpiLabel">Overall City Risk Level</div>
+        <div class="kpiValue"><span id="kpiCity">72</span><span class="kpiUnit">%</span></div>
+        <div class="kpiMeta"><span class="chip bad" id="kpiCityChip">+14% from baseline</span></div>
+        <div class="kpiBar"><div class="kpiFill" id="barCity"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 1: ALERT + FORECAST -->
+  <div class="row1">
+    <section class="panel">
+      <div class="panelHeader">
         <div>
-          <h1 class="title">Predictive Accident Forecasting & Intelligence</h1>
-          <p class="subtitle">City-wide risk outlook, early warnings, and explainable drivers for the next 24 hours.</p>
+          <h2>Early Warning Alert</h2>
+          <p>Proactive notice based on short-horizon signals</p>
         </div>
-
-        <div class="controls">
-          <div class="pill">🕒 <span id="nowLabel">Live</span></div>
-
-          <select id="areaSelect" title="Focus area">
-            <option value="ALL" selected>All Areas</option>
-            <option value="Al Qusais">Al Qusais</option>
-            <option value="Al Rashidiyah">Al Rashidiyah</option>
-            <option value="Hor Al Anz">Hor Al Anz</option>
-            <option value="Airport Rd">Airport Rd</option>
-            <option value="Al Twar">Al Twar</option>
-            <option value="Muraqqabad">Muraqqabad</option>
-          </select>
-
-          <select id="horizonSelect" title="Forecast horizon">
-            <option value="24" selected>Next 24 Hours</option>
-            <option value="12">Next 12 Hours</option>
-            <option value="6">Next 6 Hours</option>
-          </select>
-
-          <button id="resetBtn" type="button">Reset</button>
-        </div>
+        <div class="tag" id="alertTag">Next 1 hour</div>
       </div>
-
-      <!-- KPI ROW -->
-      <div class="kpis">
-        <div class="kpi" data-kpi="confidence">
-          <div class="kpiLabel">Model Confidence</div>
-          <div class="kpiValue"><span id="kpiConfidence">91</span><span class="kpiUnit">%</span></div>
-          <div class="kpiMeta">
-            <span class="chip good" id="kpiConfidenceChip">Stable</span>
-            <span style="color: rgba(255,255,255,.70); font-weight:900; font-size:11px;">click</span>
-          </div>
-          <div class="kpiBar"><div class="kpiFill" id="barConfidence"></div></div>
-        </div>
-
-        <div class="kpi" data-kpi="streets">
-          <div class="kpiLabel">Critical Risk Streets</div>
-          <div class="kpiValue"><span id="kpiStreets">3</span><span class="kpiUnit"></span></div>
-          <div class="kpiMeta">
-            <span class="chip bad" id="kpiStreetsChip">Risk score &gt; 85%</span>
-            <span style="color: rgba(255,255,255,.70); font-weight:900; font-size:11px;">click</span>
-          </div>
-          <div class="kpiBar"><div class="kpiFill" id="barStreets"></div></div>
-        </div>
-
-        <div class="kpi" data-kpi="expected">
-          <div class="kpiLabel">Accidents Expected (Next 3h)</div>
-          <div class="kpiValue"><span id="kpiExpected">18</span><span class="kpiUnit"></span></div>
-          <div class="kpiMeta">
-            <span class="chip warn" id="kpiExpectedChip">Elevated</span>
-            <span style="color: rgba(255,255,255,.70); font-weight:900; font-size:11px;">click</span>
-          </div>
-          <div class="kpiBar"><div class="kpiFill" id="barExpected"></div></div>
-        </div>
-
-        <div class="kpi" data-kpi="city">
-          <div class="kpiLabel">Overall City Risk Level</div>
-          <div class="kpiValue"><span id="kpiCity">72</span><span class="kpiUnit">%</span></div>
-          <div class="kpiMeta">
-            <span class="chip bad" id="kpiCityChip">+14% from baseline</span>
-            <span style="color: rgba(255,255,255,.70); font-weight:900; font-size:11px;">click</span>
-          </div>
-          <div class="kpiBar"><div class="kpiFill" id="barCity"></div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- MAIN GRID -->
-    <div class="grid">
-
-      <!-- EARLY WARNING (LEFT) -->
-      <section class="panel">
-        <div class="panelHeader">
-          <div>
-            <h2>Early Warning Alert</h2>
-            <p>Proactive notice based on short-horizon signals</p>
-          </div>
-          <div class="tag" id="alertTag">Next 1 hour</div>
-        </div>
-
-        <div class="panelBody">
-          <div class="alertBox" id="alertBox">
-            <div class="alertTitle">
-              <div class="left">
-                <div class="alertIcon">⚠️</div>
-                <div>
-                  <div style="font-size:13px; font-weight:900;">High incident probability</div>
-                  <div style="font-size:11px; font-weight:800; color: rgba(255,255,255,.70);">Hotspots detected</div>
-                </div>
+      <div class="panelBody">
+        <div class="alertBox">
+          <div class="alertTop">
+            <div class="alertLeft">
+              <div class="alertIcon">⚠️</div>
+              <div>
+                <div class="alertHead">High incident probability</div>
+                <div class="alertSub">Hotspots detected</div>
               </div>
-              <span class="chip bad" id="alertSeverityChip">CRITICAL</span>
             </div>
-            <div class="alertText" id="alertText">
-              High incident probability in the next 1 hour around <strong>Al Qusais</strong> and <strong>Al Rashidiyah</strong> areas
-            </div>
-            <div class="hint">
-              <span>Tip: click a bar (Top 5 Areas) to focus alert</span>
-              <span id="alertSignal">Signals: traffic density • peak hour • recent incidents</span>
-            </div>
+            <span class="chip bad" id="alertSeverityChip">CRITICAL</span>
           </div>
-
-          <div class="chartWrap" style="height: 220px;">
-            <canvas id="miniGauge"></canvas>
+          <div class="alertText" id="alertText">
+            High incident probability in the next 1 hour around <strong>Al Qusais</strong> and <strong>Al Rashidiyah</strong> areas
+          </div>
+          <div class="hint">
+            <span>Tip: click a bar (Top 5 Areas) to focus</span>
+            <span id="alertSignal">Signals: traffic density • peak hour • recent incidents</span>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- FORECAST (RIGHT) -->
-      <section class="panel">
-        <div class="panelHeader">
-          <div>
-            <h2>Accident Prediction Forecast — <span id="forecastTitle">Next 24 Hours</span></h2>
-            <p>Predicted accidents by 3-hour window (interactive)</p>
-          </div>
-          <div class="tag" id="forecastTag">Confidence band</div>
+    <section class="panel">
+      <div class="panelHeader">
+        <div>
+          <h2>Accident Prediction Forecast — <span id="forecastTitle">Next 24 Hours</span></h2>
+          <p>Predicted accidents by 3-hour window</p>
         </div>
-
-        <div class="panelBody">
-          <div class="chartWrap" style="height: 320px;">
-            <canvas id="forecastChart"></canvas>
-          </div>
+        <div class="tag">Confidence band</div>
+      </div>
+      <div class="panelBody">
+        <div class="chartWrap">
+          <canvas id="forecastChart" height="210"></canvas>
         </div>
-      </section>
+      </div>
+    </section>
+  </div>
 
-      <!-- BOTTOM ROW -->
-      <div class="bottom">
-
-        <!-- WEEKLY HEATMAP -->
-        <section class="panel">
-          <div class="panelHeader">
+  <!-- ROW 2: HEATMAP + (TOP AREAS + FACTORS) -->
+  <div class="row2">
+    <section class="panel">
+      <div class="panelHeader">
+        <div>
+          <h2>Weekly High Risk Hours</h2>
+          <p>Severity by day &amp; hour — click any cell</p>
+        </div>
+        <div class="tag" id="heatTag">Dubai (simulated)</div>
+      </div>
+      <div class="panelBody">
+        <div class="heatWrap">
+          <div class="heatTop">
             <div>
-              <h2>Weekly High Risk Hours</h2>
-              <p>Severity distribution by day & hour (click any cell)</p>
+              <div class="heatTitle">Severity legend</div>
+              <div class="heatSub">Based on rush hours + peak traffic patterns</div>
             </div>
-            <div class="tag" id="heatTag">Dubai (simulated)</div>
-          </div>
-
-          <div class="panelBody">
-            <div class="heatWrap">
-              <div class="heatTop">
-                <div style="display:flex; flex-direction:column; gap:2px;">
-                  <div style="font-weight:900; font-size:12px;">Severity legend</div>
-                  <div style="font-weight:700; font-size:11px; color: rgba(255,255,255,.62);">
-                    Based on rush hours + peak traffic patterns
-                  </div>
-                </div>
-
-                <div class="heatLegend">
-                  <span><i class="dot low"></i>Low</span>
-                  <span><i class="dot med"></i>Medium</span>
-                  <span><i class="dot high"></i>High</span>
-                  <span><i class="dot crit"></i>Critical</span>
-                </div>
-              </div>
-
-              <div class="heatGrid" id="heatGrid"></div>
-
-              <div class="axisRow">
-                <div class="spacer"></div>
-                <div class="tick">00</div><div class="tick">02</div><div class="tick">04</div><div class="tick">06</div>
-                <div class="tick">08</div><div class="tick">10</div><div class="tick">12</div><div class="tick">14</div>
-                <div class="tick">16</div><div class="tick">18</div><div class="tick">20</div><div class="tick">22</div>
-              </div>
-            </div>
-
-            <div class="chartWrap" style="height: 170px;">
-              <canvas id="dayProfile"></canvas>
+            <div class="heatLegend">
+              <span><i class="dot low"></i>Low</span>
+              <span><i class="dot med"></i>Medium</span>
+              <span><i class="dot high"></i>High</span>
+              <span><i class="dot crit"></i>Critical</span>
             </div>
           </div>
-        </section>
-
-        <!-- RIGHT STACK: TOP AREAS + FACTORS -->
-        <div class="stack">
-          <section class="panel">
-            <div class="panelHeader">
-              <div>
-                <h2>Top 5 Accident Risk Areas</h2>
-                <p>Relative risk score (click a bar)</p>
-              </div>
-              <div class="tag" id="areasTag">Live ranking</div>
-            </div>
-            <div class="panelBody">
-              <div class="chartWrap" style="height: 240px;">
-                <canvas id="areasChart"></canvas>
-              </div>
-            </div>
-          </section>
-
-          <section class="panel">
-            <div class="panelHeader">
-              <div>
-                <h2>Top Factors Driving Accident Risk</h2>
-                <p>Model drivers (normalized importance)</p>
-              </div>
-              <div class="tag" id="factorsTag">Explainable AI</div>
-            </div>
-            <div class="panelBody">
-              <div class="chartWrap" style="height: 240px;">
-                <canvas id="factorsChart"></canvas>
-              </div>
-            </div>
-          </section>
+          <div class="heatGrid" id="heatGrid"></div>
+          <div class="axisRow">
+            <div></div>
+            <div class="tick">00</div><div class="tick">02</div><div class="tick">04</div><div class="tick">06</div>
+            <div class="tick">08</div><div class="tick">10</div><div class="tick">12</div><div class="tick">14</div>
+            <div class="tick">16</div><div class="tick">18</div><div class="tick">20</div><div class="tick">22</div>
+          </div>
         </div>
-
+        <div class="chartWrap">
+          <canvas id="dayProfile" height="130"></canvas>
+        </div>
       </div>
+    </section>
+
+    <div class="stack">
+      <section class="panel">
+        <div class="panelHeader">
+          <div>
+            <h2>Top 5 Accident Risk Areas</h2>
+            <p>Relative risk score — click a bar</p>
+          </div>
+          <div class="tag" id="areasTag">Live ranking</div>
+        </div>
+        <div class="panelBody">
+          <div class="chartWrap">
+            <canvas id="areasChart" height="175"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panelHeader">
+          <div>
+            <h2>Top Factors Driving Accident Risk</h2>
+            <p>Model drivers (normalized importance)</p>
+          </div>
+          <div class="tag">Explainable AI</div>
+        </div>
+        <div class="panelBody">
+          <div class="chartWrap">
+            <canvas id="factorsChart" height="175"></canvas>
+          </div>
+        </div>
+      </section>
     </div>
-
   </div>
 
-  <!-- Custom tooltip -->
-  <div class="tooltip" id="tooltip">
-    <p class="t1" id="tt1"></p>
-    <p class="t2" id="tt2"></p>
-  </div>
+</div>
 
-  <script>
-    // ---------- DATA (matching your screenshot vibe) ----------
-    const KPI_BASE = {
-      confidence: { value: 91, bar: 91, chip: "Stable", chipClass: "good" },
-      streets: { value: 3,  bar: 60, chip: "Risk score > 85%", chipClass: "bad" },
-      expected: { value: 18, bar: 72, chip: "Elevated", chipClass: "warn" },
-      city: { value: 72, bar: 72, chip: "+14% from baseline", chipClass: "bad" }
-    };
+<div class="tooltip" id="tooltip">
+  <p class="t1" id="tt1"></p>
+  <p class="t2" id="tt2"></p>
+</div>
 
-    // 3-hour windows across next 24h (same shape as image)
-    const FORECAST_24H = {
-      labels: ["00-03","03-06","06-09","09-12","12-15","15-18","18-21","21-24"],
-      predicted: [4, 3, 4, 9, 15, 12, 11, 13],
-      // simple confidence band around predicted
-      lower:    [2, 2, 3, 7, 12, 10, 9, 11],
-      upper:    [6, 4, 6, 11, 18, 14, 13, 15]
-    };
+<script>
+  const KPI_BASE = {
+    confidence: { value:91, bar:91, chip:"Stable",             chipClass:"good" },
+    streets:    { value:3,  bar:60, chip:"Risk score > 85%",   chipClass:"bad"  },
+    expected:   { value:18, bar:72, chip:"Elevated",            chipClass:"warn" },
+    city:       { value:72, bar:72, chip:"+14% from baseline", chipClass:"bad"  }
+  };
 
-    const FORECAST_12H = {
-      labels: ["00-03","03-06","06-09","09-12"],
-      predicted: [4, 3, 4, 9],
-      lower:    [2, 2, 3, 7],
-      upper:    [6, 4, 6, 11]
-    };
+  const FORECAST_DATA = {
+    "24":{ labels:["00-03","03-06","06-09","09-12","12-15","15-18","18-21","21-24"], predicted:[4,3,4,9,15,12,11,13], lower:[2,2,3,7,12,10,9,11], upper:[6,4,6,11,18,14,13,15] },
+    "12":{ labels:["00-03","03-06","06-09","09-12"], predicted:[4,3,4,9], lower:[2,2,3,7], upper:[6,4,6,11] },
+    "6": { labels:["00-03","03-06"], predicted:[4,3], lower:[2,2], upper:[6,4] }
+  };
 
-    const FORECAST_6H = {
-      labels: ["00-03","03-06"],
-      predicted: [4, 3],
-      lower:    [2, 2],
-      upper:    [6, 4]
-    };
+  const TOP_AREAS=[{name:"Hor Al Anz",score:88},{name:"Airport Rd",score:85},{name:"Al Twar",score:82},{name:"Rashidiyah",score:74},{name:"Muraqqabad",score:70}];
+  const FACTORS=[{name:"Traffic Density",val:.82},{name:"School Let-Out",val:.65},{name:"Construction",val:.55},{name:"Past 7-Day Incidents",val:.48},{name:"Weather Heat",val:.40}];
+  const DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const SLOTS=["00","02","04","06","08","10","12","14","16","18","20","22"];
+  const HEAT={Sun:[0,0,0,1,1,1,1,2,2,2,1,0],Mon:[0,0,1,1,2,2,1,2,3,3,2,1],Tue:[0,0,1,1,2,2,1,2,3,3,2,1],Wed:[0,0,1,1,2,2,1,2,3,3,2,1],Thu:[0,1,1,2,3,2,1,2,3,3,2,1],Fri:[0,1,1,2,3,2,1,2,3,3,2,1],Sat:[0,0,0,1,1,1,1,2,2,2,1,0]};
+  const LEVEL_META=[{name:"Low",color:"rgba(46,204,113,.90)",score:25},{name:"Medium",color:"rgba(243,156,18,.92)",score:50},{name:"High",color:"rgba(255,140,0,.95)",score:75},{name:"Critical",color:"rgba(255,71,87,.95)",score:92}];
 
-    const TOP_AREAS = [
-      { name:"Hor Al Anz", score: 88 },
-      { name:"Airport Rd", score: 85 },
-      { name:"Al Twar", score: 82 },
-      { name:"Rashidiyah", score: 74 },
-      { name:"Muraqqabad", score: 70 }
-    ];
+  const $=id=>document.getElementById(id);
+  function setNow(){const d=new Date(),p=n=>String(n).padStart(2,"0");$("nowLabel").textContent=`${p(d.getHours())}:${p(d.getMinutes())}`;}
+  setNow();setInterval(setNow,15000);
+  function showTip(x,y,t1,t2){$("tt1").textContent=t1;$("tt2").textContent=t2;const tt=$("tooltip");tt.style.left=(x+14)+"px";tt.style.top=(y+14)+"px";tt.classList.add("visible");}
+  function hideTip(){$("tooltip").classList.remove("visible");}
+  function setChip(el,text,cls){el.textContent=text;el.className="chip "+cls;}
 
-    const FACTORS = [
-      { name:"Traffic Density", val: 0.82 },
-      { name:"School Let-Out", val: 0.65 },
-      { name:"Construction", val: 0.55 },
-      { name:"Past 7-Day Incidents", val: 0.48 },
-      { name:"Weather Heat", val: 0.40 }
-    ];
+  function renderKPIs(k){
+    $("kpiConfidence").textContent=k.confidence.value;$("kpiStreets").textContent=k.streets.value;$("kpiExpected").textContent=k.expected.value;$("kpiCity").textContent=k.city.value;
+    setChip($("kpiConfidenceChip"),k.confidence.chip,k.confidence.chipClass);setChip($("kpiStreetsChip"),k.streets.chip,k.streets.chipClass);setChip($("kpiExpectedChip"),k.expected.chip,k.expected.chipClass);setChip($("kpiCityChip"),k.city.chip,k.city.chipClass);
+    requestAnimationFrame(()=>{$("barConfidence").style.width=k.confidence.bar+"%";$("barStreets").style.width=k.streets.bar+"%";$("barExpected").style.width=k.expected.bar+"%";$("barCity").style.width=k.city.bar+"%";});
+  }
+  renderKPIs(KPI_BASE);
 
-    // Heatmap: 7 days x 12 slots (2-hour bins)
-    const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-    const SLOTS = ["00","02","04","06","08","10","12","14","16","18","20","22"];
+  document.querySelectorAll(".kpi").forEach(card=>{
+    card.addEventListener("mouseenter",e=>showTip(e.clientX,e.clientY,"KPI Details",`${card.dataset.kpi.toUpperCase()} · value: ${KPI_BASE[card.dataset.kpi].value}`));
+    card.addEventListener("mousemove", e=>showTip(e.clientX,e.clientY,"KPI Details",`${card.dataset.kpi.toUpperCase()} · value: ${KPI_BASE[card.dataset.kpi].value}`));
+    card.addEventListener("mouseleave",hideTip);
+    card.addEventListener("click",()=>{
+      if(card.dataset.kpi==="confidence")$("kpiConfidenceChip").textContent="Stable (validated)";
+      if(card.dataset.kpi==="city")$("kpiCityChip").textContent="+14% from baseline (7d avg)";
+    });
+  });
 
-    // Levels: 0 low, 1 med, 2 high, 3 critical (pattern: peaks around 08-10 and 16-20, higher Thu/Fri)
-    const HEAT = {
-      Sun: [0,0,0,1,1,1,1,2,2,2,1,0],
-      Mon: [0,0,1,1,2,2,1,2,3,3,2,1],
-      Tue: [0,0,1,1,2,2,1,2,3,3,2,1],
-      Wed: [0,0,1,1,2,2,1,2,3,3,2,1],
-      Thu: [0,1,1,2,3,2,1,2,3,3,2,1],
-      Fri: [0,1,1,2,3,2,1,2,3,3,2,1],
-      Sat: [0,0,0,1,1,1,1,2,2,2,1,0]
-    };
+  Chart.defaults.color="rgba(255,255,255,.80)";
+  Chart.defaults.font.family="'Poppins',system-ui,sans-serif";
+  Chart.defaults.font.size=11;
+  Chart.defaults.plugins.legend.labels.boxWidth=10;
+  Chart.defaults.plugins.tooltip.backgroundColor="rgba(10,14,28,.92)";
+  Chart.defaults.plugins.tooltip.borderColor="rgba(255,255,255,.16)";
+  Chart.defaults.plugins.tooltip.borderWidth=1;
+  Chart.defaults.plugins.tooltip.titleFont={weight:"800",size:11};
+  Chart.defaults.plugins.tooltip.bodyFont={weight:"700",size:11};
 
-    const LEVEL_META = [
-      { name:"Low",      color:"var(--low)",  score: 25 },
-      { name:"Medium",   color:"var(--med)",  score: 50 },
-      { name:"High",     color:"var(--high)", score: 75 },
-      { name:"Critical", color:"var(--crit)", score: 92 }
-    ];
+  let forecastChart;
+  function buildForecast(key){
+    const d=FORECAST_DATA[key];const ctx=$("forecastChart").getContext("2d");
+    const grad=ctx.createLinearGradient(0,0,0,200);grad.addColorStop(0,"rgba(255,71,87,.40)");grad.addColorStop(1,"rgba(255,71,87,.02)");
+    if(forecastChart)forecastChart.destroy();
+    forecastChart=new Chart(ctx,{type:"line",data:{labels:d.labels,datasets:[
+      {label:"Lower",data:d.lower,borderColor:"rgba(0,0,0,0)",pointRadius:0,tension:.35},
+      {label:"Confidence",data:d.upper,borderColor:"rgba(0,0,0,0)",pointRadius:0,tension:.35,fill:{target:"-1"},backgroundColor:"rgba(255,255,255,.10)"},
+      {label:"Predicted Accidents",data:d.predicted,borderColor:"rgba(255,71,87,.95)",backgroundColor:grad,pointBackgroundColor:"rgba(255,71,87,.95)",pointBorderColor:"rgba(255,255,255,.85)",pointBorderWidth:2,pointRadius:4,pointHoverRadius:6,borderWidth:2.5,tension:.35,fill:true}
+    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+      plugins:{legend:{position:"top",labels:{usePointStyle:true,pointStyle:"rectRounded",padding:10}},tooltip:{callbacks:{label:i=>{if(i.dataset.label==="Lower")return"";if(i.dataset.label==="Confidence")return"Confidence band";return`Predicted: ${i.formattedValue}`;}},filter:i=>i.dataset.label!=="Lower"}},
+      scales:{x:{grid:{color:"rgba(255,255,255,.07)"},ticks:{font:{weight:"800"}}},y:{beginAtZero:true,grid:{color:"rgba(255,255,255,.07)"},ticks:{font:{weight:"800"}}}}}});
+  }
 
-    // ---------- UTIL ----------
-    const $ = (id) => document.getElementById(id);
+  let areasChart;
+  function buildAreas(){
+    const ctx=$("areasChart").getContext("2d");if(areasChart)areasChart.destroy();
+    areasChart=new Chart(ctx,{type:"bar",data:{labels:TOP_AREAS.map(d=>d.name),datasets:[{label:"Risk score",data:TOP_AREAS.map(d=>d.score),backgroundColor:"rgba(255,71,87,.85)",borderColor:"rgba(255,255,255,.10)",borderWidth:1,borderRadius:5}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>`Risk score: ${i.formattedValue}%`}}},
+        scales:{x:{grid:{display:false},ticks:{font:{weight:"800"}}},y:{beginAtZero:true,max:100,grid:{color:"rgba(255,255,255,.07)"},ticks:{font:{weight:"800"},callback:v=>v+"%"}}},
+        onClick:(evt,els)=>{if(els.length)focusArea(TOP_AREAS[els[0].index].name);}}});
+  }
 
-    function setNowLabel(){
-      const d = new Date();
-      const pad = (n) => String(n).padStart(2,"0");
-      $("nowLabel").textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    }
-    setNowLabel();
-    setInterval(setNowLabel, 15000);
+  let factorsChart;
+  function buildFactors(){
+    const ctx=$("factorsChart").getContext("2d");if(factorsChart)factorsChart.destroy();
+    factorsChart=new Chart(ctx,{type:"bar",data:{labels:FACTORS.map(d=>d.name),datasets:[{label:"Importance",data:FACTORS.map(d=>d.val),backgroundColor:"rgba(56,143,255,.85)",borderColor:"rgba(255,255,255,.10)",borderWidth:1,borderRadius:5}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>`Importance: ${Number(i.raw).toFixed(2)}`}}},
+        scales:{x:{grid:{display:false},ticks:{font:{weight:"800"},maxRotation:0}},y:{beginAtZero:true,max:1,grid:{color:"rgba(255,255,255,.07)"},ticks:{font:{weight:"800"}}}}}});
+  }
 
-    function showTooltip(x, y, t1, t2){
-      const tt = $("tooltip");
-      $("tt1").textContent = t1;
-      $("tt2").textContent = t2;
-      tt.style.left = (x + 14) + "px";
-      tt.style.top  = (y + 14) + "px";
-      tt.classList.add("visible");
-    }
-    function hideTooltip(){ $("tooltip").classList.remove("visible"); }
+  let dayProfile;
+  function buildDayProfile(day="Thu"){
+    const ctx=$("dayProfile").getContext("2d");if(dayProfile)dayProfile.destroy();
+    const levels=HEAT[day].map(l=>LEVEL_META[l].score);
+    dayProfile=new Chart(ctx,{type:"line",data:{labels:SLOTS.map(s=>`${s}:00`),datasets:[{label:`${day} risk profile`,data:levels,borderColor:"rgba(124,92,255,.95)",backgroundColor:"rgba(124,92,255,.14)",pointRadius:3,pointHoverRadius:5,borderWidth:2,tension:.35,fill:true}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:"rgba(255,255,255,.07)"},ticks:{font:{weight:"800"}}},y:{beginAtZero:true,max:100,grid:{color:"rgba(255,255,255,.07)"},ticks:{font:{weight:"800"}}}}}});
+  }
 
-    function setChip(el, text, cls){
-      el.textContent = text;
-      el.classList.remove("good","bad","warn");
-      el.classList.add(cls);
-    }
-
-    // ---------- KPI RENDER ----------
-    function renderKPIs(k){
-      $("kpiConfidence").textContent = k.confidence.value;
-      $("kpiStreets").textContent = k.streets.value;
-      $("kpiExpected").textContent = k.expected.value;
-      $("kpiCity").textContent = k.city.value;
-
-      setChip($("kpiConfidenceChip"), k.confidence.chip, k.confidence.chipClass);
-      setChip($("kpiStreetsChip"), k.streets.chip, k.streets.chipClass);
-      setChip($("kpiExpectedChip"), k.expected.chip, k.expected.chipClass);
-      setChip($("kpiCityChip"), k.city.chip, k.city.chipClass);
-
-      requestAnimationFrame(() => {
-        $("barConfidence").style.width = k.confidence.bar + "%";
-        $("barStreets").style.width    = k.streets.bar + "%";
-        $("barExpected").style.width   = k.expected.bar + "%";
-        $("barCity").style.width       = k.city.bar + "%";
-      });
-    }
-    renderKPIs(KPI_BASE);
-
-    // KPI click interactions (tiny, useful)
-    document.querySelectorAll(".kpi").forEach(card => {
-      card.addEventListener("mouseenter", (e) => {
-        const type = card.dataset.kpi;
-        const meta = KPI_BASE[type];
-        showTooltip(e.clientX, e.clientY, "KPI details", `${type.toUpperCase()} • value: ${meta.value}`);
-      });
-      card.addEventListener("mousemove", (e) => {
-        const type = card.dataset.kpi;
-        const meta = KPI_BASE[type];
-        showTooltip(e.clientX, e.clientY, "KPI details", `${type.toUpperCase()} • value: ${meta.value}`);
-      });
-      card.addEventListener("mouseleave", hideTooltip);
-
-      card.addEventListener("click", () => {
-        // simple pulse: on click slightly tweak chips to feel alive
-        if (card.dataset.kpi === "confidence") {
-          $("kpiConfidenceChip").textContent = "Stable (validated)";
-        }
-        if (card.dataset.kpi === "city") {
-          $("kpiCityChip").textContent = "+14% from baseline (7d avg)";
-        }
+  function renderHeatmap(){
+    const grid=$("heatGrid");grid.innerHTML="";
+    DAYS.forEach(day=>{
+      const lbl=document.createElement("div");lbl.className="heatRowLabel";lbl.textContent=day;grid.appendChild(lbl);
+      HEAT[day].forEach((lvl,idx)=>{
+        const cell=document.createElement("div");cell.className="heatCell";cell.style.background=LEVEL_META[lvl].color;
+        cell.dataset.day=day;cell.dataset.slot=SLOTS[idx];cell.dataset.level=lvl;
+        cell.addEventListener("mouseenter",e=>{const l=+cell.dataset.level;showTip(e.clientX,e.clientY,`${day} · ${cell.dataset.slot}:00`,`Severity: ${LEVEL_META[l].name} · Score: ${LEVEL_META[l].score}`);});
+        cell.addEventListener("mousemove", e=>{const l=+cell.dataset.level;showTip(e.clientX,e.clientY,`${day} · ${cell.dataset.slot}:00`,`Severity: ${LEVEL_META[l].name} · Score: ${LEVEL_META[l].score}`);});
+        cell.addEventListener("mouseleave",hideTip);
+        cell.addEventListener("click",()=>{$("heatTag").textContent=`Selected: ${day} ${cell.dataset.slot}:00`;buildDayProfile(day);});
+        grid.appendChild(cell);
       });
     });
+  }
 
-    // ---------- CHART DEFAULTS ----------
-    Chart.defaults.color = "rgba(255,255,255,.82)";
-    Chart.defaults.font.family = "'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
-    Chart.defaults.plugins.legend.labels.boxWidth = 12;
-    Chart.defaults.plugins.tooltip.backgroundColor = "rgba(10,14,28,.9)";
-    Chart.defaults.plugins.tooltip.borderColor = "rgba(255,255,255,.16)";
-    Chart.defaults.plugins.tooltip.borderWidth = 1;
-    Chart.defaults.plugins.tooltip.titleFont = { weight: "800" };
-    Chart.defaults.plugins.tooltip.bodyFont = { weight: "700" };
-    Chart.defaults.plugins.tooltip.displayColors = true;
-
-    // Helper: gradient for lines
-    function makeLineGradient(ctx){
-      const g = ctx.createLinearGradient(0, 0, 0, 260);
-      g.addColorStop(0, "rgba(255,71,87,.45)");
-      g.addColorStop(1, "rgba(255,71,87,.02)");
-      return g;
+  function focusArea(areaName){
+    const map={"Rashidiyah":"Al Rashidiyah","Airport Rd":"Airport Rd","Hor Al Anz":"Hor Al Anz","Al Twar":"Al Twar","Muraqqabad":"Muraqqabad"};
+    const area=map[areaName]||areaName;
+    const sel=$("areaSelect");const opt=[...sel.options].find(o=>o.value===area||o.value===areaName);
+    if(opt)sel.value=opt.value;else sel.value="ALL";
+    if(areaName==="ALL"){
+      $("alertText").innerHTML=`High incident probability in the next 1 hour around <strong>Al Qusais</strong> and <strong>Al Rashidiyah</strong> areas`;
+      setChip($("alertSeverityChip"),"CRITICAL","bad");$("alertSignal").textContent="Signals: traffic density • peak hour • recent incidents";
+    } else {
+      $("alertText").innerHTML=`High incident probability in the next 1 hour around <strong>${area}</strong> area`;
+      setChip($("alertSeverityChip"),"HIGH","warn");$("alertSignal").textContent="Signals: local congestion • construction • recent incidents";
     }
+    const k=JSON.parse(JSON.stringify(KPI_BASE));
+    if(areaName!=="ALL"){k.city.value=Math.min(100,KPI_BASE.city.value+2);k.expected.value=Math.min(60,KPI_BASE.expected.value+1);}
+    renderKPIs(k);if(areaName!=="ALL")setTimeout(()=>renderKPIs(KPI_BASE),1200);
+  }
 
-    // ---------- FORECAST CHART ----------
-    let forecastChart;
+  renderHeatmap();buildForecast("24");buildAreas();buildFactors();buildDayProfile("Thu");
 
-    function buildForecast(data){
-      const canvas = $("forecastChart");
-      const ctx = canvas.getContext("2d");
-
-      const lower = {
-        label: "Lower",
-        data: data.lower,
-        borderColor: "rgba(255,255,255,0)",
-        pointRadius: 0,
-        tension: 0.35
-      };
-
-      const upper = {
-        label: "Confidence",
-        data: data.upper,
-        borderColor: "rgba(255,255,255,0)",
-        pointRadius: 0,
-        tension: 0.35,
-        fill: { target: "-1" },
-        backgroundColor: "rgba(255,255,255,.10)"
-      };
-
-      const predicted = {
-        label: "Predicted Accidents",
-        data: data.predicted,
-        borderColor: "rgba(255,71,87,.95)",
-        backgroundColor: makeLineGradient(ctx),
-        pointBackgroundColor: "rgba(255,71,87,.95)",
-        pointBorderColor: "rgba(255,255,255,.90)",
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        borderWidth: 2.5,
-        tension: 0.35,
-        fill: true
-      };
-
-      if (forecastChart) forecastChart.destroy();
-
-      forecastChart = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: data.labels,
-          datasets: [lower, upper, predicted]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: { mode: "index", intersect: false },
-          plugins: {
-            legend: {
-              position: "top",
-              labels: { usePointStyle: true, pointStyle: "rectRounded" }
-            },
-            tooltip: {
-              callbacks: {
-                label: (item) => {
-                  if (item.dataset.label === "Lower") return "";
-                  if (item.dataset.label === "Confidence") return "Confidence band";
-                  return `Predicted: ${item.formattedValue}`;
-                }
-              },
-              filter: (item) => item.dataset.label !== "Lower"
-            }
-          },
-          scales: {
-            x: {
-              grid: { color: "rgba(255,255,255,.08)" },
-              ticks: { font: { weight: "800" } }
-            },
-            y: {
-              beginAtZero: true,
-              grid: { color: "rgba(255,255,255,.08)" },
-              ticks: { font: { weight: "800" } }
-            }
-          }
-        }
-      });
-    }
-
-    // ---------- TOP AREAS ----------
-    let areasChart;
-    function buildAreas(){
-      const ctx = $("areasChart").getContext("2d");
-      if (areasChart) areasChart.destroy();
-
-      areasChart = new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: TOP_AREAS.map(d => d.name),
-          datasets: [{
-            label: "Risk score",
-            data: TOP_AREAS.map(d => d.score),
-            borderColor: "rgba(255,255,255,.10)",
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive:true,
-          maintainAspectRatio:false,
-          plugins: {
-            legend: { display:false },
-            tooltip: {
-              callbacks: {
-                label: (item) => `Risk score: ${item.formattedValue}%`
-              }
-            }
-          },
-          scales: {
-            x: {
-              grid: { display:false },
-              ticks: { font: { weight:"800" } }
-            },
-            y: {
-              beginAtZero:true,
-              max: 100,
-              grid: { color:"rgba(255,255,255,.08)" },
-              ticks: { font: { weight:"800" }, callback: (v) => v + "%" }
-            }
-          },
-          onClick: (evt, elements) => {
-            if (!elements.length) return;
-            const idx = elements[0].index;
-            const name = TOP_AREAS[idx].name;
-            focusArea(name);
-          }
-        }
-      });
-    }
-
-    // ---------- FACTORS ----------
-    let factorsChart;
-    function buildFactors(){
-      const ctx = $("factorsChart").getContext("2d");
-      if (factorsChart) factorsChart.destroy();
-
-      factorsChart = new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: FACTORS.map(d => d.name),
-          datasets: [{
-            label: "Importance",
-            data: FACTORS.map(d => d.val),
-            borderColor: "rgba(255,255,255,.10)",
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive:true,
-          maintainAspectRatio:false,
-          plugins: {
-            legend: { display:false },
-            tooltip: {
-              callbacks: {
-                label: (item) => `Importance: ${Number(item.raw).toFixed(2)}`
-              }
-            }
-          },
-          scales: {
-            x: {
-              grid: { display:false },
-              ticks: { font: { weight:"800" }, maxRotation: 0, minRotation: 0 }
-            },
-            y: {
-              beginAtZero:true,
-              max: 1,
-              grid: { color:"rgba(255,255,255,.08)" },
-              ticks: { font: { weight:"800" } }
-            }
-          }
-        }
-      });
-    }
-
-    // ---------- MINI GAUGE (alert intensity) ----------
-    let miniGauge;
-    function buildMiniGauge(value=0.82){
-      const ctx = $("miniGauge").getContext("2d");
-      if (miniGauge) miniGauge.destroy();
-
-      miniGauge = new Chart(ctx, {
-        type: "doughnut",
-        data: {
-          labels: ["Alert intensity", "Remaining"],
-          datasets: [{
-            data: [Math.round(value*100), 100 - Math.round(value*100)],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive:true,
-          maintainAspectRatio:false,
-          cutout: "72%",
-          plugins: {
-            legend: { display:false },
-            tooltip: {
-              callbacks: {
-                label: (item) => item.dataIndex === 0
-                  ? `Intensity: ${item.raw}%`
-                  : ""
-              },
-              filter: (item) => item.dataIndex === 0
-            }
-          }
-        },
-        plugins: [{
-          id: "centerText",
-          afterDraw(chart){
-            const { ctx, chartArea } = chart;
-            const cx = (chartArea.left + chartArea.right) / 2;
-            const cy = (chartArea.top + chartArea.bottom) / 2;
-
-            ctx.save();
-            ctx.textAlign = "center";
-            ctx.fillStyle = "rgba(255,255,255,.92)";
-            ctx.font = "800 18px Poppins";
-            ctx.fillText(`${Math.round(value*100)}%`, cx, cy + 2);
-            ctx.fillStyle = "rgba(255,255,255,.62)";
-            ctx.font = "800 11px Poppins";
-            ctx.fillText("Alert intensity", cx, cy + 18);
-            ctx.restore();
-          }
-        }]
-      });
-
-      // set colors after create (avoid hardcoding global theme beyond what you already use)
-      miniGauge.data.datasets[0].backgroundColor = [
-        "rgba(255,71,87,.95)",
-        "rgba(255,255,255,.10)"
-      ];
-      miniGauge.update();
-    }
-
-    // ---------- DAY PROFILE (heatmap selection) ----------
-    let dayProfile;
-    function buildDayProfile(day="Thu"){
-      const ctx = $("dayProfile").getContext("2d");
-      if (dayProfile) dayProfile.destroy();
-
-      const levels = HEAT[day].map(l => LEVEL_META[l].score);
-      dayProfile = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: SLOTS.map(s => `${s}:00`),
-          datasets: [{
-            label: `${day} risk profile`,
-            data: levels,
-            borderColor: "rgba(124,92,255,.95)",
-            backgroundColor: "rgba(124,92,255,.14)",
-            pointRadius: 3,
-            pointHoverRadius: 5,
-            borderWidth: 2.2,
-            tension: 0.35,
-            fill: true
-          }]
-        },
-        options: {
-          responsive:true,
-          maintainAspectRatio:false,
-          plugins: { legend: { display:false } },
-          scales: {
-            x: { grid: { color:"rgba(255,255,255,.08)" }, ticks: { font:{ weight:"800" } } },
-            y: { beginAtZero:true, max:100, grid: { color:"rgba(255,255,255,.08)" }, ticks: { font:{ weight:"800" } } }
-          }
-        }
-      });
-    }
-
-    // ---------- HEATMAP RENDER ----------
-    function levelToColor(lvl){
-      return LEVEL_META[lvl].color;
-    }
-
-    function renderHeatmap(){
-      const grid = $("heatGrid");
-      grid.innerHTML = "";
-
-      DAYS.forEach(day => {
-        // Row label
-        const label = document.createElement("div");
-        label.className = "heatRowLabel";
-        label.textContent = day;
-        grid.appendChild(label);
-
-        // Cells
-        HEAT[day].forEach((lvl, idx) => {
-          const cell = document.createElement("div");
-          cell.className = "heatCell";
-          cell.style.background = levelToColor(lvl);
-
-          cell.dataset.day = day;
-          cell.dataset.slot = SLOTS[idx];
-          cell.dataset.level = lvl;
-
-          cell.addEventListener("mouseenter", (e) => {
-            const l = Number(cell.dataset.level);
-            showTooltip(
-              e.clientX, e.clientY,
-              `${day} • ${cell.dataset.slot}:00`,
-              `Severity: ${LEVEL_META[l].name} • Score: ${LEVEL_META[l].score}`
-            );
-          });
-          cell.addEventListener("mousemove", (e) => {
-            const l = Number(cell.dataset.level);
-            showTooltip(
-              e.clientX, e.clientY,
-              `${day} • ${cell.dataset.slot}:00`,
-              `Severity: ${LEVEL_META[l].name} • Score: ${LEVEL_META[l].score}`
-            );
-          });
-          cell.addEventListener("mouseleave", hideTooltip);
-
-          cell.addEventListener("click", () => {
-            $("heatTag").textContent = `Selected: ${day} ${cell.dataset.slot}:00`;
-            buildDayProfile(day);
-          });
-
-          grid.appendChild(cell);
-        });
-      });
-    }
-
-    // ---------- AREA FOCUS (syncs alert + minor KPI tweaks + dropdown) ----------
-    function focusArea(areaName){
-      // normalize names (bar chart uses Rashidiyah, dropdown uses Al Rashidiyah, etc.)
-      const mapped = {
-        "Rashidiyah": "Al Rashidiyah",
-        "Airport Rd": "Airport Rd",
-        "Hor Al Anz": "Hor Al Anz",
-        "Al Twar": "Al Twar",
-        "Muraqqabad": "Muraqqabad"
-      };
-      const area = mapped[areaName] || areaName;
-
-      $("areaSelect").value = area.includes("Al Qusais") ? "Al Qusais" :
-                              area.includes("Rashidiyah") ? "Al Rashidiyah" :
-                              (mapped[areaName] ? mapped[areaName] : "ALL");
-
-      // Update alert text
-      if (area === "ALL") {
-        $("alertText").innerHTML = `High incident probability in the next 1 hour around <strong>Al Qusais</strong> and <strong>Al Rashidiyah</strong> areas`;
-        $("alertSeverityChip").textContent = "CRITICAL";
-        $("alertSignal").textContent = "Signals: traffic density • peak hour • recent incidents";
-        buildMiniGauge(0.82);
-        return;
-      }
-
-      $("alertText").innerHTML = `High incident probability in the next 1 hour around <strong>${area}</strong> area`;
-      $("alertSeverityChip").textContent = "HIGH";
-      $("alertSignal").textContent = "Signals: local congestion • construction • recent incidents";
-      buildMiniGauge(0.74);
-
-      // tiny KPI “alive” effect
-      const bump = (n, delta, min, max) => Math.max(min, Math.min(max, n + delta));
-      const newKpis = JSON.parse(JSON.stringify(KPI_BASE));
-      newKpis.city.value = bump(KPI_BASE.city.value, 2, 0, 100);
-      newKpis.expected.value = bump(KPI_BASE.expected.value, 1, 0, 60);
-      newKpis.streets.value = bump(KPI_BASE.streets.value, 0, 0, 10);
-      renderKPIs(newKpis);
-      setTimeout(() => renderKPIs(KPI_BASE), 1200);
-    }
-
-    // ---------- HORIZON SWITCH ----------
-    function setHorizon(h){
-      if (h === "24") {
-        $("forecastTitle").textContent = "Next 24 Hours";
-        buildForecast(FORECAST_24H);
-      } else if (h === "12") {
-        $("forecastTitle").textContent = "Next 12 Hours";
-        buildForecast(FORECAST_12H);
-      } else {
-        $("forecastTitle").textContent = "Next 6 Hours";
-        buildForecast(FORECAST_6H);
-      }
-    }
-
-    // ---------- INIT ----------
-    renderHeatmap();
-    buildForecast(FORECAST_24H);
-    buildAreas();
-    buildFactors();
-    buildMiniGauge(0.82);
-    buildDayProfile("Thu");
-
-    // Dropdowns
-    $("areaSelect").addEventListener("change", (e) => {
-      const v = e.target.value;
-      if (v === "ALL") focusArea("ALL");
-      else focusArea(v);
-    });
-
-    $("horizonSelect").addEventListener("change", (e) => setHorizon(e.target.value));
-
-    $("resetBtn").addEventListener("click", () => {
-      $("areaSelect").value = "ALL";
-      $("horizonSelect").value = "24";
-      $("heatTag").textContent = "Dubai (simulated)";
-      $("areasTag").textContent = "Live ranking";
-      $("factorsTag").textContent = "Explainable AI";
-      $("alertTag").textContent = "Next 1 hour";
-
-      renderKPIs(KPI_BASE);
-      focusArea("ALL");
-      setHorizon("24");
-      buildDayProfile("Thu");
-    });
-
-    // Make bars more “glass” without hardcoding chart colors globally
-    // (set dataset colors after init so we stay consistent with your style)
-    function applyChartColors(){
-      if (areasChart){
-        areasChart.data.datasets[0].backgroundColor = "rgba(255,71,87,.85)";
-        areasChart.update();
-      }
-      if (factorsChart){
-        factorsChart.data.datasets[0].backgroundColor = "rgba(56,143,255,.85)";
-        factorsChart.update();
-      }
-    }
-    applyChartColors();
-
-    // Clicking outside hides custom tooltip
-    window.addEventListener("scroll", hideTooltip, { passive:true });
-  </script>
+  $("areaSelect").addEventListener("change",e=>focusArea(e.target.value==="ALL"?"ALL":e.target.value));
+  $("horizonSelect").addEventListener("change",e=>{const h=e.target.value;$("forecastTitle").textContent=`Next ${h} Hours`;buildForecast(h);});
+  $("resetBtn").addEventListener("click",()=>{
+    $("areaSelect").value="ALL";$("horizonSelect").value="24";$("heatTag").textContent="Dubai (simulated)";$("forecastTitle").textContent="Next 24 Hours";
+    renderKPIs(KPI_BASE);focusArea("ALL");buildForecast("24");buildDayProfile("Thu");
+  });
+  window.addEventListener("scroll",hideTip,{passive:true});
+</script>
 </body>
 </html>
